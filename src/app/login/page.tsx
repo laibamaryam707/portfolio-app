@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import toast from "react-hot-toast";
 
+
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -46,10 +47,16 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 space-y-5">
           <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="you@email.com" />
           <Input label="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required placeholder="••••••••" />
+            <div className="text-right">
+  <Link href="/forgot-password" className="text-xs text-sky-300 hover:underline">
+    Forgot password?
+  </Link>
+</div>
           <Button type="submit" disabled={loading} className="w-full" size="lg">
             {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
+      
 
         <p className="text-center text-sm text-slate-400 mt-6">
           Don&apos;t have an account?{" "}
