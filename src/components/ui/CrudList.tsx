@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Inbox } from "lucide-react";
 import Button from "./Button";
 import Modal from "./Modal";
 import Card from "./Card";
 import ImagePicker from "./ImagePicker";
+import EmptyState from "./EmptyState";
 import { useIsViewer } from "@/components/dashboard/DashboardContent";
 import toast from "react-hot-toast";
 
@@ -26,11 +27,13 @@ interface CrudListProps<T extends { _id: string }> {
   apiPath: string;
   renderItem: (item: T) => React.ReactNode;
   getInitialForm: () => Record<string, unknown>;
-  /** Optional controls rendered between the title and the list (e.g. search/filter). */
   toolbar?: React.ReactNode;
-  /** When true, deletion is described as moving to Trash (for soft-delete resources). */
   softDelete?: boolean;
+  subtitle?: string;
 }
+
+const fieldCls =
+  "w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder:text-white/40 focus:border-sky-500 focus:outline-none transition";
 
 export default function CrudList<T extends { _id: string }>({
   title,
@@ -43,6 +46,7 @@ export default function CrudList<T extends { _id: string }>({
   getInitialForm,
   toolbar,
   softDelete = false,
+  subtitle,
 }: CrudListProps<T>) {
   const isViewer = useIsViewer();
   const [open, setOpen] = useState(false);
@@ -82,7 +86,7 @@ export default function CrudList<T extends { _id: string }>({
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "Failed to save");
       }
-      toast.success(editing ? "Updated successfully" : "Created successfully");
+      toast.success(editing ? "Changes saved" : "Created successfully");
       setOpen(false);
       onRefresh();
     } catch (err) {
@@ -112,8 +116,11 @@ export default function CrudList<T extends { _id: string }>({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6 gap-4">
-        <h1 className="text-2xl font-bold text-white">{title}</h1>
+      <div className="flex items-start justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">{title}</h1>
+          {subtitle && <p className="text-sm text-white/60 mt-1">{subtitle}</p>}
+        </div>
         {!isViewer && (
           <Button onClick={openCreate} size="sm">
             <Plus size={16} /> Add New
@@ -124,25 +131,37 @@ export default function CrudList<T extends { _id: string }>({
       {toolbar && <div className="mb-5">{toolbar}</div>}
 
       {items.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-slate-400">{emptyMessage}</p>
-          {!isViewer && (
-            <Button onClick={openCreate} className="mt-4" size="sm">
-              <Plus size={16} /> Add your first item
-            </Button>
-          )}
+        <Card>
+          <EmptyState
+            icon={Inbox}
+            title="Nothing here yet"
+            description={emptyMessage}
+            action={!isViewer ? "Add your first one" : undefined}
+            onAction={!isViewer ? openCreate : undefined}
+          />
         </Card>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <Card key={item._id} className="p-4 flex items-start justify-between gap-4">
+            <Card
+              key={item._id}
+              className="p-4 flex items-start justify-between gap-4 transition hover:shadow-card-hover"
+            >
               <div className="flex-1 min-w-0">{renderItem(item)}</div>
               {!isViewer && (
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => openEdit(item)} className="p-2 text-slate-400 hover:text-indigo-400 transition rounded-lg hover:bg-white/5">
+                  <button
+                    onClick={() => openEdit(item)}
+                    className="p-2 text-white/40 hover:text-white transition rounded-lg hover:bg-white/10"
+                    aria-label="Edit"
+                  >
                     <Pencil size={16} />
                   </button>
-                  <button onClick={() => handleDelete(item._id)} className="p-2 text-slate-400 hover:text-red-400 transition rounded-lg hover:bg-white/5">
+                  <button
+                    onClick={() => handleDelete(item._id)}
+                    className="p-2 text-white/40 hover:text-red-400 transition rounded-lg hover:bg-white/10"
+                    aria-label="Delete"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -152,7 +171,11 @@ export default function CrudList<T extends { _id: string }>({
         </div>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title={editing ? `Edit ${title}` : `Add ${title}`}>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={editing ? `Edit ${title.replace(/s$/, "")}` : `Add ${title.replace(/s$/, "")}`}
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           {fields.map((field) => (
             <div key={field.name}>
@@ -165,22 +188,22 @@ export default function CrudList<T extends { _id: string }>({
                 />
               ) : field.type === "textarea" ? (
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-slate-300">{field.label}</label>
+                  <label className="block text-sm font-medium text-white/60">{field.label}</label>
                   <textarea
                     value={String(form[field.name] ?? "")}
                     onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
                     placeholder={field.placeholder}
                     rows={3}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none resize-none"
+                    className={`${fieldCls} resize-none`}
                   />
                 </div>
               ) : field.type === "select" ? (
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-slate-300">{field.label}</label>
+                  <label className="block text-sm font-medium text-white/60">{field.label}</label>
                   <select
                     value={String(form[field.name] ?? "")}
                     onChange={(e) => setForm({ ...form, [field.name]: e.target.value })}
-                    className="w-full rounded-xl border border-white/10 bg-slate-900 px-4 py-2.5 text-white focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-xl border border-white/10 bg-[#1f3048] px-4 py-2.5 text-white focus:border-sky-500 focus:outline-none"
                   >
                     {field.options?.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -188,24 +211,30 @@ export default function CrudList<T extends { _id: string }>({
                   </select>
                 </div>
               ) : field.type === "checkbox" ? (
-                <label className="flex items-center gap-2 text-slate-300">
+                <label className="flex items-center gap-2.5 text-white cursor-pointer">
                   <input
                     type="checkbox"
                     checked={Boolean(form[field.name])}
                     onChange={(e) => setForm({ ...form, [field.name]: e.target.checked })}
-                    className="rounded"
+                    className="rounded accent-sky-500 w-4 h-4"
                   />
                   {field.label}
                 </label>
               ) : (
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-slate-300">{field.label}</label>
+                  <label className="block text-sm font-medium text-white/60">{field.label}</label>
                   <input
                     type={field.type || "text"}
                     value={String(form[field.name] ?? "")}
-                    onChange={(e) => setForm({ ...form, [field.name]: field.type === "number" ? Number(e.target.value) : e.target.value })}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        [field.name]:
+                          field.type === "number" ? Number(e.target.value) : e.target.value,
+                      })
+                    }
                     placeholder={field.placeholder}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none"
+                    className={fieldCls}
                   />
                 </div>
               )}
@@ -213,9 +242,11 @@ export default function CrudList<T extends { _id: string }>({
           ))}
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? "Saving..." : editing ? "Update" : "Create"}
+              {loading ? "Saving…" : editing ? "Save changes" : "Create"}
             </Button>
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
           </div>
         </form>
       </Modal>
