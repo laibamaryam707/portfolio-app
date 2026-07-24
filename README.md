@@ -9,7 +9,7 @@ A full-stack Portfolio Management System for developers and creatives. Manage yo
 
 ## Overview
 
-Portfolio Vault is a personal CMS that lets you manage all your portfolio content in one place and publish it as a polished public-facing website. It includes a full analytics dashboard, role-based access, real-time activity tracking, and five distinct portfolio themes.
+Portfolio Vault lets you manage all your portfolio content in one place and publish it as a polished public-facing website. It includes a full analytics dashboard, role-based access, real-time activity tracking, and five distinct portfolio themes.
 
 ---
 
