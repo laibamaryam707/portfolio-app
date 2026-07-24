@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
 
   const data = await req.json();
+  if (!data.name || String(data.name).trim().length === 0) {
+  return NextResponse.json({ error: "Skill name is required" }, { status: 400 });
+}
+if (String(data.name).trim().length > 50) {
+  return NextResponse.json({ error: "Name must be under 50 characters" }, { status: 400 });
+}
   const skill = await Skill.create({ ...data, userId: result.user._id });
   await logActivity(result.user._id, "created", "skill", skill.name);
   return NextResponse.json({ skill: JSON.parse(JSON.stringify(skill)) }, { status: 201 });

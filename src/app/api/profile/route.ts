@@ -18,6 +18,14 @@ export async function PUT(req: NextRequest) {
   if (denied) return denied;
 
   const data = await req.json();
+  if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email))) {
+  return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+}
+if (data.website && data.website !== "") {
+  try { new URL(String(data.website)); } catch {
+    return NextResponse.json({ error: "Website must be a valid URL" }, { status: 400 });
+  }
+}
   const profile = await Profile.findOneAndUpdate(
     { userId: result.user._id },
     { $set: data },

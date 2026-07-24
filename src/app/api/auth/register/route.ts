@@ -12,6 +12,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email, password, and username are required" }, { status: 400 });
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+    }
+
     if (password.length < 6) {
       return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
     }
@@ -20,12 +24,23 @@ export async function POST(req: NextRequest) {
     if (cleanUsername.length < 3) {
       return NextResponse.json({ error: "Username must be at least 3 characters" }, { status: 400 });
     }
+    if (cleanUsername.length > 20) {
+      return NextResponse.json({ error: "Username must be under 20 characters" }, { status: 400 });
+    }
 
     await connectDB();
 
     const existing = await User.findOne({ $or: [{ email }, { username: cleanUsername }] });
     if (existing) {
-      return NextResponse.json({ error: "Email or username already exists" }, { status: 409 });
+      return NextResponse.json(
+        {
+          error:
+            existing.email === email
+              ? "Email already registered"
+              : "Username already taken",
+        },
+        { status: 409 }
+      );
     }
 
     const hashed = await hashPassword(password);
@@ -38,10 +53,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       user: { id: user._id, email: user.email, username: user.username },
     });
- } catch (error) {
-  console.error("Register error:", error);
-  return NextResponse.json({ 
-    error: error instanceof Error ? error.message : String(error) 
-  }, { status: 500 });
-}
+  } catch (error) {
+    console.error("Register error:", error);
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : String(error),
+    }, { status: 500 });
+  }
 }

@@ -19,6 +19,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
   const data = await req.json();
+  if (data.title !== undefined && String(data.title).trim().length === 0) {
+  return NextResponse.json({ error: "Title cannot be empty" }, { status: 400 });
+}
+if (data.image && String(data.image).length > 5 * 1024 * 1024) {
+  return NextResponse.json({ error: "Image is too large. Maximum size is 5MB." }, { status: 400 });
+}
   const tech = normalizeList(data.technologies);
   const tags = normalizeList(data.tags);
   if (tech) data.technologies = tech;

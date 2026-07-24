@@ -11,6 +11,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const { id } = await params;
   const data = await req.json();
+  if (data.name !== undefined && String(data.name).trim().length === 0) {
+  return NextResponse.json({ error: "Skill name cannot be empty" }, { status: 400 });
+}
   const skill = await Skill.findOneAndUpdate({ _id: id, userId: result.user._id }, data, { new: true });
   if (!skill) return NextResponse.json({ error: "Not found" }, { status: 404 });
   await logActivity(result.user._id, "updated", "skill", skill.name);

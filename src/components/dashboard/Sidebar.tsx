@@ -36,11 +36,10 @@ export default function Sidebar({ username, role = "admin", mobileOpen = false, 
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    toast.success("Logged out");
-    router.push("/login");
-  };
+ const handleLogout = async () => {
+  await fetch("/api/auth/logout", { method: "POST" });
+  window.location.href = "/login"; // hard redirect, clears any cached state
+};
 
   const isViewer = role === "viewer";
 

@@ -55,6 +55,17 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
 
   const data = await req.json();
+  if (!data.title || String(data.title).trim().length === 0) {
+  return NextResponse.json({ error: "Title is required" }, { status: 400 });
+}
+if (String(data.title).trim().length > 100) {
+  return NextResponse.json({ error: "Title must be under 100 characters" }, { status: 400 });
+}
+if (data.liveUrl && data.liveUrl !== "") {
+  try { new URL(String(data.liveUrl)); } catch {
+    return NextResponse.json({ error: "Live URL must be a valid URL" }, { status: 400 });
+  }
+}
   const tech = normalizeList(data.technologies);
   const tags = normalizeList(data.tags);
   if (tech) data.technologies = tech;
